@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>VSRG Tooling</title>
+  </head>
+  <body>
+    <main class="container">
+      <section class="controls">
+        <h1 class="mono">CONTROLS</h1>
+
+        <section>
+          <header>
+            <b>Beatmap data</b>
+            <!-- <span>Expects raw string data from an osu!mania beatmap</span> -->
+            <span>Expects an .osz file with osu!mania difficulties</span>
+          </header>
+
+          <!-- <textarea class="mono" id="beatmap-data" rows="4" placeholder="Insert data..."></textarea> -->
+          <input type="file" class="mono" id="beatmap-data" />
+          <select class="mono" id="beatmap-difficulty"></select>
+        </section>
+
+        <section>
+          <header>
+            <b>Scroll scale</b>
+            <span>Expects a float value greater than 0</span>
+          </header>
+
+          <input class="mono" id="scroll-scale" type="number" placeholder="1" value="45" min="1" />
+        </section>
+
+        <section>
+          <header>
+            <b>Timing offset</b>
+            <span>Expects any amount of time in milliseconds</span>
+          </header>
+
+          <input class="mono" id="timing-offset" type="number" placeholder="0" value="-24" />
+        </section>
+
+        <section>
+          <header>
+            <b>Audio track</b>
+          </header>
+
+          <audio id="audio" controls />
+        </section>
+      </section>
+
+      <section class="playfield">
+        <h1 class="mono">PLAYFIELD</h1>
+
+        <canvas id="playfield"></canvas>
+      </section>
+
+      <section class="output">
+        <h1 class="mono">OUTPUT</h1>
+
+        <div class="outputs">
+          <textarea class="mono" id="beatmap-parsed" placeholder="Parsed data will be shown here..."></textarea>
+          <textarea class="mono" id="beatmap-output" placeholder="Output will be inserted here..."></textarea>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
