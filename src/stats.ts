@@ -59,5 +59,10 @@ const renderStats = (timestamp: DOMHighResTimeStamp) => {
 export const addPlotPoint = (key: keyof typeof data, point: PlotPoint) => data[key].push({ time: performance.now() / 1000, ...point });
 
 export const initialize = () => {
+  setInterval(() => {
+    data.presses = data.presses.filter((p) => clockTime - p.time <= 60);
+    data.visibleNotes = data.visibleNotes.filter((p) => clockTime - p.time <= 60);
+  }, 10000);
+
   requestAnimationFrame(renderStats);
 };
