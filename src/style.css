@@ -124,7 +124,8 @@ input:focus {
   height: 100%;
 }
 
-#playfield {
+#playfield,
+#stats {
   border: 2px solid #fff4;
 
   display: flex;
@@ -137,29 +138,6 @@ input:focus {
   height: 100%;
 }
 
-#playfield .column {
-  width: 4rem;
-  min-height: 100%;
-  background-color: #fff1;
-
-  display: inline-block;
-  position: relative;
-}
-
-.hit-object {
-  width: 100%;
-  height: 24px;
-
-  background-color: #fff6;
-  border: 2px solid #fff8;
-  box-sizing: border-box;
-
-  left: 0;
-  position: absolute;
-}
-
-.hit-object > span {
-  position: absolute;
-  right: calc(100% + 1rem);
-  top: 0;
+#stats {
+  height: 100px;
 }

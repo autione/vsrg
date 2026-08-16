@@ -1,5 +1,6 @@
 import "./style.css";
 import { clamp } from "./utils";
+import { initialize, addPlotPoint } from "./stats";
 import JSZip, * as jszip from "jszip";
 
 const dataInput = document.querySelector("#beatmap-data") as HTMLInputElement;
@@ -189,9 +190,6 @@ const renderPlayfield = (timestamp: DOMHighResTimeStamp) => {
     context.textBaseline = "top";
     context.fillStyle = "#fff";
 
-    context.font = "16px 'IBM Plex Mono'";
-    context.fillText(`${Math.floor(audio.currentTime * 1000)} / ${Math.floor(audio.duration * 1000)} (${Math.floor(trackTime * 1000)})`, 20, 40);
-
     context.font = "16px 'IBM Plex Sans'";
     context.fillText(`${currentChart.chart.hits.length} hit objects loaded`, 20, 20);
 
@@ -207,20 +205,19 @@ const renderPlayfield = (timestamp: DOMHighResTimeStamp) => {
 
     const pressHeight = playfield.height - 120;
 
-    context.textAlign = "right";
-    context.fillText(`${pressTime} (${(delta * 1000).toFixed(2)}ms / ${(1 / delta).toFixed(1)} FPS)`, playfield.width - 20, 20);
-
     const fadeGradient = context.createLinearGradient(0, pressHeight, 0, playfield.height);
     fadeGradient.addColorStop(0, "#0000");
     fadeGradient.addColorStop(1, "#000");
 
     const colGradients = [];
+    let visibleInColumn = [];
 
     context.save();
     context.globalAlpha = 0.25;
     for (let i = 1; i <= currentChart.chart.columns; i += 1) {
       const x = stageAnchor + i * (noteWidth + noteGap);
       const colColor = columnColors[i - 1];
+      visibleInColumn[i - 1] = 0;
 
       context.fillStyle = colColor;
       context.fillRect(x, pressHeight - noteHeight / 2, noteWidth, noteHeight);
@@ -248,13 +245,18 @@ const renderPlayfield = (timestamp: DOMHighResTimeStamp) => {
     }
     context.restore();
 
+    let visibleNotes = 0;
     for (const note of currentChart.chart.hits) {
       const timeSec = note.time / 1000;
       const relativeTime = timeSec - trackTime + pressTime;
 
       const x = stageAnchor + note.column * (noteWidth + noteGap);
       const y = pressHeight - relativeTime * (scale * noteHeight);
+      if (y <= -noteHeight) continue;
+
       const position: [number, number] = [x, y + noteHeight / 2];
+      const colIndex = note.column - 1;
+      const colColor = columnColors[colIndex];
 
       if (!(note.column in presses)) presses[note.column] = {};
       const pressed = note.time in presses[note.column];
@@ -265,17 +267,26 @@ const renderPlayfield = (timestamp: DOMHighResTimeStamp) => {
           holdTime = Math.max(0, (note.endTime - note.time) / 1000);
         }
 
-        hits[note.column - 1] = 1 + holdTime;
+        hits[colIndex] = 1 + holdTime;
         presses[note.column][note.time] = true;
+        addPlotPoint("presses", { color: colColor, value: colIndex });
       } else if (relativeTime > -pressTime && pressed) {
         delete presses[note.column][note.time];
       }
 
-      if (pressed) {
-        context.fillStyle = "#000";
-      } else {
-        context.fillStyle = columnColors[note.column - 1];
+      if (!pressed) {
+        context.fillStyle = colColor;
         context.fillRect(...position, noteWidth, noteHeight);
+
+        context.fillStyle = "#000";
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillText(`${Math.floor(relativeTime * 1000)}`, x + noteWidth / 2, y + noteHeight);
+
+        visibleInColumn[colIndex] += 1;
+        visibleNotes += 1;
+
+        addPlotPoint("visibleNotes", { color: colColor, value: visibleInColumn[colIndex] || 0 });
       }
 
       if (note.endTime) {
@@ -288,18 +299,31 @@ const renderPlayfield = (timestamp: DOMHighResTimeStamp) => {
 
         context.save();
         context.globalAlpha = 0.5;
+        context.fillStyle = pressed ? "#000" : colColor;
         context.fillRect(...holdPosition, noteWidth / 2, endHeight);
         context.restore();
       }
-
-      context.fillStyle = "#000";
-      context.textAlign = "center";
-      context.textBaseline = "middle";
-      context.fillText(`${Math.floor(relativeTime * 1000)}`, x + noteWidth / 2, y + noteHeight);
     }
 
     context.fillStyle = fadeGradient;
     context.fillRect(0, pressHeight, playfield.width, playfield.height - pressHeight);
+
+    context.fillStyle = "#fff";
+    context.textAlign = "left";
+    context.textBaseline = "top";
+    context.fillText(`${visibleNotes} currently rendering`, 20, 40);
+
+    context.textAlign = "right";
+    context.fillText(`${pressTime} (${(delta * 1000).toFixed(2)}ms / ${(1 / delta).toFixed(1)} FPS)`, playfield.width - 20, 20);
+
+    context.font = "16px 'IBM Plex Mono'";
+    context.fillText(
+      `${Math.floor(audio.currentTime * 1000)} / ${Math.floor(audio.duration * 1000)} (${Math.floor(trackTime * 1000)})`,
+      playfield.width - 20,
+      40,
+    );
+
+    addPlotPoint("visibleNotes", { color: "#fff", value: visibleNotes });
 
     if (currentChart.chart.invalid) {
       context.font = "bold 24px 'IBM Plex Sans'";
@@ -354,12 +378,11 @@ const updateDifficulty = async () => {
   const beatmap = beatmapSet[difficulty.value];
   if (beatmap) {
     const result = loadBeatmap(beatmap);
-    console.log(result, currentArchive);
     if (!result || !currentArchive) return;
 
     const audioName = result.parsed.General.AudioFilename;
     const extracted = currentArchive.file(audioName);
-    console.log(audioName, extracted);
+
     if (extracted) {
       audio.src = URL.createObjectURL(await extracted.async("blob"));
     }
@@ -377,3 +400,4 @@ addEventListener("DOMContentLoaded", () => {
 });
 
 requestAnimationFrame(renderPlayfield);
+initialize();
