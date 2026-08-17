@@ -10,9 +10,9 @@ some slight enhancements have been made compared to the version made back then, 
 
 ## ▶️ running
 
-you need a standalone javascript runtime (i used [bun](https://bun.sh/) for this). just install dependencies at the project root, then execute the `dev` vite task.
+if you just wanna quickly try vsrg, you can open it on [vsrg.auti.one](https://vsrg.auti.one) to use it straight away. otherwise, you'll need a standalone javascript runtime. just install dependencies at the project root, then execute the `dev` vite task.
 
-with bun, this would consist of running `bun install` then `bun run dev`. it should open a localhost server at 5173, which you can access to use vsrg.
+with [bun](https://bun.sh/) (the toolkit i used for this), this would consist of running `bun install` then `bun run dev`. it should open a localhost server at 5173, which you can access to use vsrg.
 
 after opening, just feed it an .osz file and select a difficulty to convert. you can also click play on the audio track element to visualize it in-app.
 
